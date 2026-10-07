@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Carnet de résolution — Lois de l'hydrostatique</title>
+<style>
+  :root{
+    --ink:#1E2761;
+    --ink-soft:#4A5485;
+    --rule:#C7CCE0;
+    --rule-soft:#E4E7F2;
+    --paper:#FDFDFB;
+    --paper-panel:#FFFFFF;
+    --accent:#C9871F;
+    --accent-ink:#5C3E0C;
+    --ok-bg:#EEF4EC;
+    --ok-rule:#9FBF95;
+    --grid: rgba(30,39,97,0.055);
+    --danger:#A5402F;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ink:#E7E9F7;
+      --ink-soft:#AEB4D6;
+      --rule:#3C4470;
+      --rule-soft:#2A2F52;
+      --paper:#15182C;
+      --paper-panel:#1C2040;
+      --accent:#E8A33D;
+      --accent-ink:#2A1C06;
+      --ok-bg:#1C2B1E;
+      --ok-rule:#4C7A49;
+      --grid: rgba(220,224,255,0.045);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"]{
+    --ink:#E7E9F7;
+    --ink-soft:#AEB4D6;
+    --rule:#3C4470;
+    --rule-soft:#2A2F52;
+    --paper:#15182C;
+    --paper-panel:#1C2040;
+    --accent:#E8A33D;
+    --accent-ink:#2A1C06;
+    --ok-bg:#1C2B1E;
+    --ok-rule:#4C7A49;
+    --grid: rgba(220,224,255,0.045);
+    color-scheme: dark;
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-padding-top: env(safe-area-inset-top,0px);}
+  body{
+    margin:0;
+    background:
+      repeating-linear-gradient(0deg, var(--grid) 0px, var(--grid) 1px, transparent 1px, transparent 32px),
+      repeating-linear-gradient(90deg, var(--grid) 0px, var(--grid) 1px, transparent 1px, transparent 32px),
+      var(--paper);
+    color:var(--ink);
+    font-family: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    font-size:15.5px;
+    line-height:1.55;
+    padding-top: env(safe-area-inset-top,0px);
+    padding-bottom: env(safe-area-inset-bottom,0px);
+  }
+  h1,h2,h3{
+    font-family: Georgia, "Iowan Old Style", "Times New Roman", serif;
+    color:var(--ink);
+    margin:0;
+  }
+  .wrap{max-width:880px; margin:0 auto; padding:28px 20px 90px;}
+
+  /* ---------- Toolbar ---------- */
+  .toolbar{
+    position:sticky; top:0; z-index:40;
+    padding-top: env(safe-area-inset-top,0px);
+    background: color-mix(in srgb, var(--paper) 88%, transparent);
+    backdrop-filter: blur(6px);
+    border-bottom:1px solid var(--rule);
+  }
+  .toolbar-inner{
+    max-width:880px; margin:0 auto; padding:10px 20px;
+    display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+  }
+  .toolbar-title{font-size:13px; letter-spacing:.04em; color:var(--ink-soft);}
+  .toolbar-actions{display:flex; gap:10px;}
+  button{
+    font-family:inherit; font-size:13.5px; cursor:pointer;
+    border-radius:3px; padding:9px 16px; border:1.4px solid var(--ink);
+    background:var(--ink); color:var(--paper);
+    transition: transform .12s ease, opacity .12s ease;
+  }
+  button:hover{opacity:.88;}
+  button:active{transform: translateY(1px);}
+  button.secondary{
+    background:transparent; color:var(--ink); border-color:var(--rule);
+  }
+  button.secondary:hover{border-color:var(--ink);}
+
+  /* ---------- Cartouche (bloc d'identification, style plan technique) ---------- */
+  .cartouche{
+    margin-top:22px;
+    border:1.6px solid var(--ink);
+  }
+  .cartouche-top{
+    display:flex; justify-content:space-between; align-items:flex-end;
+    padding:16px 18px 14px; border-bottom:1.6px solid var(--ink);
+    gap:16px; flex-wrap:wrap;
+  }
+  .cartouche-top .eyebrow{font-size:11.5px; letter-spacing:.14em; color:var(--accent-ink); background:var(--accent); display:inline-block; padding:3px 8px; font-weight:700;}
+  .cartouche-top h1{font-size:28px; margin-top:8px;}
+  .cartouche-top .sub{color:var(--ink-soft); font-style:italic; font-size:14.5px; margin-top:4px;}
+  .cartouche-fields{
+    display:grid; grid-template-columns: repeat(4, 1fr);
+  }
+  .cartouche-fields .f{
+    border-right:1px solid var(--rule); padding:9px 12px;
+  }
+  .cartouche-fields .f:last-child{border-right:none;}
+  .cartouche-fields label{display:block; font-size:10.5px; letter-spacing:.09em; color:var(--ink-soft); margin-bottom:4px;}
+  .cartouche-fields input{
+    width:100%; border:none; border-bottom:1px solid var(--rule-soft); background:transparent;
+    color:var(--ink); font-family:inherit; font-size:14px; padding:3px 0;
+  }
+  .cartouche-fields input:focus{outline:none; border-bottom-color:var(--accent);}
+
+  /* ---------- Intro / consignes ---------- */
+  .intro{margin:22px 0 6px; color:var(--ink-soft); max-width:68ch;}
+
+  .ref-table{width:100%; border-collapse:collapse; margin:18px 0 30px; font-size:14px;}
+  .ref-table caption{text-align:left; font-size:11.5px; letter-spacing:.09em; color:var(--ink-soft); margin-bottom:6px;}
+  .ref-table th, .ref-table td{border:1px solid var(--rule); padding:7px 10px; text-align:left;}
+  .ref-table th{background:var(--ink); color:var(--paper); font-weight:600; font-size:12.5px;}
+  .ref-table td.formula{font-family: "SFMono-Regular", Consolas, "Courier New", monospace; font-size:13.5px;}
+  .ref-table tr:nth-child(even) td{background:var(--rule-soft);}
+
+  /* ---------- Exercice ---------- */
+  .exercise{
+    margin:34px 0; border:1px solid var(--rule); background:var(--paper-panel);
+    break-inside: avoid-page;
+  }
+  .exercise-head{
+    display:flex; align-items:center; gap:14px;
+    padding:14px 18px; border-bottom:1px solid var(--rule);
+  }
+  .ex-num{
+    font-family: Georgia, serif; font-size:22px; font-weight:700; color:var(--accent-ink);
+    background:var(--accent); width:40px; height:40px; min-width:40px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .ex-title{flex:1;}
+  .ex-title h2{font-size:18.5px;}
+  .ex-meta{font-size:12px; color:var(--ink-soft); font-style:italic;}
+
+  .situation{
+    margin:16px 18px; padding:12px 14px;
+    background:var(--rule-soft); border-left:3px solid var(--ink-soft);
+    font-style:italic; font-size:14.5px; color:var(--ink);
+  }
+  .situation b{font-style:normal;}
+
+  .question{padding:0 18px 18px;}
+  .question + .question{border-top:1px dashed var(--rule); padding-top:16px;}
+  .q-text{font-size:14.5px; margin:4px 0 10px; display:flex; gap:8px;}
+  .q-index{font-weight:700; color:var(--ink);}
+
+  .field-label{font-size:11px; letter-spacing:.08em; color:var(--ink-soft); margin:10px 0 4px;}
+  .calc-area{
+    min-height:62px; border:1px solid var(--rule); background:var(--paper);
+    padding:9px 11px; font-size:14.5px; line-height:1.5;
+    font-family: "SFMono-Regular", Consolas, "Courier New", monospace;
+  }
+  .calc-area:focus{outline:none; border-color:var(--ink-soft);}
+  .calc-area:empty:before{content: attr(data-placeholder); color: var(--ink-soft); opacity:.55; font-family:inherit;}
+
+  .result-row{display:flex; align-items:center; gap:10px; margin-top:10px; flex-wrap:wrap;}
+  .result-row .field-label{margin:0;}
+  .result-input{
+    border:1.4px solid var(--accent); background:var(--paper);
+    padding:8px 11px; font-size:14.5px; color:var(--ink); font-family:inherit;
+    min-width:220px; flex:1;
+  }
+  .result-input:focus{outline:none; box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 35%, transparent);}
+
+  /* ---------- Bilan ---------- */
+  .bilan{margin:34px 0; border:1px solid var(--ok-rule); background:var(--ok-bg); padding:16px 18px;}
+  .bilan h2{font-size:17px; margin-bottom:8px;}
+  .bilan .calc-area{min-height:90px; background:var(--paper-panel);}
+
+  .footer-note{
+    margin-top:30px; padding-top:16px; border-top:1px solid var(--rule);
+    font-size:13px; color:var(--ink-soft);
+  }
+  .footer-note strong{color:var(--ink);}
+
+  .progress{
+    font-size:12px; color:var(--ink-soft);
+  }
+  .progress b{color:var(--ink);}
+
+  /* ---------- Print ---------- */
+  @media print{
+    @page{ margin: 14mm; }
+    body{background:white !important;}
+    .no-print{display:none !important;}
+    .toolbar{position:static; border:none;}
+    .wrap{padding:0; max-width:none;}
+    .cartouche, .exercise, .ref-table, .bilan{break-inside: avoid-page;}
+    .exercise{border-color:#999;}
+    a[href]:after{content:"";}
+    .calc-area{border-color:#999; background:white;}
+    .result-input{border-color:#333;}
+  }
+
+  @media (max-width: 560px){
+    .cartouche-fields{grid-template-columns: 1fr 1fr;}
+    .cartouche-fields .f:nth-child(2n){border-right:none;}
+    .cartouche-fields .f:nth-child(-n+2){border-bottom:1px solid var(--rule-soft);}
+  }
+</style>
+</head>
+<body>
+
+  <div class="toolbar no-print">
+    <div class="toolbar-inner">
+      <div class="toolbar-title">Carnet de résolution — <span class="progress" id="progress"><b>0</b>/16 champs complétés</span></div>
+      <div class="toolbar-actions">
+        <button class="secondary" id="resetBtn" type="button">Réinitialiser</button>
+        <button id="printBtn" type="button">🖨️ Imprimer / Enregistrer en PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+
+    <div class="cartouche">
+      <div class="cartouche-top">
+        <div>
+          <span class="eyebrow">MODULE MSPC — HYDRAULIQUE INDUSTRIELLE</span>
+          <h1>Carnet de résolution</h1>
+          <div class="sub">Exercices d'application — Les lois de l'hydrostatique</div>
+        </div>
+      </div>
+      <div class="cartouche-fields">
+        <div class="f"><label for="fNom">Nom et prénom</label><input id="fNom" type="text" autocomplete="off"></div>
+        <div class="f"><label for="fClasse">Classe</label><input id="fClasse" type="text" autocomplete="off" placeholder="1 MSPC"></div>
+        <div class="f"><label for="fDate">Date</label><input id="fDate" type="date"></div>
+        <div class="f"><label for="fDuree">Durée</label><input id="fDuree" type="text" value="≈ 30 min"></div>
+      </div>
+    </div>
+
+    <p class="intro">Complète directement ce carnet à l'écran : une zone pour poser ton calcul, un champ pour le résultat final. Une fois terminé, utilise le bouton <strong>« Imprimer / Enregistrer en PDF »</strong> ci-dessus pour générer un PDF de tes réponses, à joindre à un e-mail pour ton professeur.</p>
+
+    <table class="ref-table">
+      <caption>FORMULAIRE DE RÉFÉRENCE</caption>
+      <thead>
+        <tr><th>Grandeur</th><th>Formule</th><th>Unités (hydraulique industrielle)</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Pression</td><td class="formula">p = F / S</td><td>p (bar), F (N ou daN), S (cm²)</td></tr>
+        <tr><td>Débit</td><td class="formula">Q = 6 × S × V</td><td>Q (L/min), S (cm²), V (m/s)</td></tr>
+        <tr><td>Puissance</td><td class="formula">P = (Q × p) / 600</td><td>P (kW), Q (L/min), p (bar)</td></tr>
+        <tr><td>Couple</td><td class="formula">C = 1,59 × q × Δp</td><td>C (daN·m), q (L/tr), Δp (bar)</td></tr>
+      </tbody>
+    </table>
+
+    <!-- EXERCICE 1 -->
+    <div class="exercise">
+      <div class="exercise-head">
+        <div class="ex-num">1</div>
+        <div class="ex-title">
+          <h2>Contrôle du limiteur de pression d'une presse à injecter</h2>
+          <div class="ex-meta">≈ 8 min — calcul d'une pression / d'une force</div>
+        </div>
+      </div>
+      <div class="situation">
+        Vous intervenez en maintenance préventive sur une presse à injecter plastique. Le vérin de fermeture du moule a un alésage (diamètre du piston) de <b>100 mm</b>. Le cahier des charges impose une force de fermeture minimale de <b>78 500 N</b> pour éviter l'ouverture du moule sous la pression d'injection.
+      </div>
+
+      <div class="question">
+        <div class="q-text"><span class="q-index">1.</span><span>Calculer la section S du piston du vérin, en cm².</span></div>
+        <div class="field-label">ZONE DE CALCUL</div>
+        <div class="calc-area" contenteditable="true" data-placeholder="Pose ton calcul ici..." data-key="ex1-q1-calc"></div>
+        <div class="result-row">
+          <span class="field-label">RÉSULTAT</span>
+          <input class="result-input" type="text" placeholder="S = … cm²" data-key="ex1-q1-res">
+        </div>
+      </div>
+      <div class="question">
+        <div class="q-text"><span class="q-index">2.</span><span>En déduire la pression minimale (en bar) à régler sur le limiteur de pression pour obtenir cette force de fermeture.</span></div>
+        <div class="field-label">ZONE DE CALCUL</div>
+        <div class="calc-area" contenteditable="true" data-placeholder="Pose ton calcul ici..." data-key="ex1-q2-calc"></div>
+        <div class="result-row">
+          <span class="field-label">RÉSULTAT</span>
+          <input class="result-input" type="text" placeholder="p = … bar" data-key="ex1-q2-res">
+        </div>
+      </div>
+      <div class="question">
+        <div class="q-text"><span class="q-index">3.</span><span>Après intervention, vous relevez 95 bar au manomètre. Cette pression est-elle suffisante ? Justifiez par le calcul de la force réellement obtenue.</span></div>
+        <div class="field-label">ZONE DE CALCUL ET JUSTIFICATION</div>
+        <div class="calc-area" contenteditable="true" data-placeholder="Pose ton calcul et ta conclusion ici..." data-key="ex1-q3-calc" style="min-height:90px;"></div>
+      </div>
+    </div>
+
+    <!-- EXERCICE 2 -->
+    <div class="exercise">
+      <div class="exercise-head">
+        <div class="ex-num">2</div>
+        <div class="ex-title">
+          <h2>Vérification de cadence sur un vérin de manutention</h2>
+          <div class="ex-meta">≈ 7 min — calcul d'un débit</div>
+        </div>
+      </div>
+      <div class="situation">
+        Sur une ligne d'emballage, un vérin de poussée (section de piston <b>S = 12 cm²</b>) doit faire avancer sa tige d'une course <b>e = 400 mm</b> en <b>2 secondes</b> pour respecter la cadence de production fixée par le service méthodes.
+      </div>
+
+      <div class="question">
+        <div class="q-text"><span class="q-index">1.</span><span>Calculer la vitesse de déplacement V du vérin, en m/s.</span></div>
+        <div class="field-label">ZONE DE CALCUL</div>
+        <div class="calc-area" contenteditable="true" data-placeholder="Pose ton calcul ici..." data-key="ex2-q1-calc"></div>
+        <div class="result-row">
+          <span class="field-label">RÉSULTAT</span>
+          <input class="result-input" type="text" placeholder="V = … m/s" data-key="ex2-q1-res">
+        </div>
+      </div>
+      <div class="question">
+        <div class="q-text"><span class="q-index">2.</span><span>En déduire le débit d'huile Q nécessaire, en L/min (Q = 6 × S × V).</span></div>
+        <div class="field-label">ZONE DE CALCUL</div>
+        <div class="calc-area" contenteditable="true" data-placeholder="Pose ton calcul ici..." data-key="ex2-q2-calc"></div>
+        <div class="result-row">
+          <span class="field-label">RÉSULTAT</span>
+          <input class="result-input" type="text" placeholder="Q = … L/min" data-key="ex2-q2-res">
+        </div>
+      </div>
+      <div class="question">
+        <div class="q-text"><span class="q-index">3.</span><span>Le groupe hydraulique fournit un débit de 14 L/min. La cadence sera-t-elle respectée ? Proposez une solution si ce n'est pas le cas.</span></div>
+        <div class="field-label">ANALYSE ET PROPOSITION</div>
+        <div class="calc-area" contenteditable="true" data-placeholder="Compare, conclus et propose une solution..." data-key="ex2-q3-calc" style="min-height:90px;"></div>
+      </div>
+    </div>
+
+    <!-- EXERCICE 3 -->
+    <div class="exercise">
+      <div class="exercise-head">
+        <div class="ex-num">3</div>
+        <div class="ex-title">
+          <h2>Remplacement du moteur électrique d'un groupe hydraulique</h2>
+          <div class="ex-meta">≈ 8 min — calcul d'une puissance</div>
+        </div>
+      </div>
+      <div class="situation">
+        Le moteur électrique d'un groupe hydraulique est tombé en panne (bobinage grillé). Vous devez le remplacer. Selon la plaque signalétique de la pompe, celle-ci doit fournir un débit <b>Q = 25 L/min</b> sous une pression de service <b>p = 180 bar</b>.
+      </div>
+
+      <div class="question">
+        <div class="q-text"><span class="q-index">1.</span><span>Calculer la puissance hydraulique théorique nécessaire, en kW.</span></div>
+        <div class="field-label">ZONE DE CALCUL</div>
+        <div class="calc-area" contenteditable="true" data-placeholder="Pose ton calcul ici..." data-key="ex3-q1-calc"></div>
+        <div class="result-row">
+          <span class="field-label">RÉSULTAT</span>
+          <input class="result-input" type="text" placeholder="P = … kW" data-key="ex3-q1-res">
+        </div>
+      </div>
+      <div class="question">
+        <div class="q-text"><span class="q-index">2.</span><span>Le magasin ne dispose que d'un moteur de 5,5 kW. En tenant compte d'un rendement de pompe de 85 %, ce moteur convient-il ? Justifiez.</span></div>
+        <div class="field-label">ZONE DE CALCUL ET JUSTIFICATION</div>
+        <div class="calc-area" contenteditable="true" data-placeholder="Pose ton calcul et ta conclusion ici..." data-key="ex3-q2-calc" style="min-height:90px;"></div>
+      </div>
+      <div class="question">
+        <div class="q-text"><span class="q-index">3.</span><span>Avant la remise en service, quelle vérification devez-vous impérativement réaliser ?</span></div>
+        <div class="field-label">RÉPONSE</div>
+        <div class="calc-area" contenteditable="true" data-placeholder="Décris les vérifications à réaliser..." data-key="ex3-q3-calc"></div>
+      </div>
+    </div>
+
+    <!-- EXERCICE 4 -->
+    <div class="exercise">
+      <div class="exercise-head">
+        <div class="ex-num">4</div>
+        <div class="ex-title">
+          <h2>Diagnostic d'un moteur hydraulique de treuil qui cale</h2>
+          <div class="ex-meta">≈ 7 min — calcul d'un couple et diagnostic</div>
+        </div>
+      </div>
+      <div class="situation">
+        Un moteur hydraulique entraîne le treuil de levage d'un pont roulant. Sa cylindrée est <b>q = 0,9 L/tr</b>. Le limiteur de pression du circuit est normalement réglé à <b>250 bar</b>. Le technicien constate que le moteur cale, alors que le couple résistant de la charge est de <b>145 daN·m</b>. En plaçant un manomètre à l'entrée du moteur, il ne relève que <b>90 bar</b> au lieu des 250 bar attendus.
+      </div>
+
+      <div class="question">
+        <div class="q-text"><span class="q-index">1.</span><span>Calculer le couple que devrait développer le moteur si la pression nominale de 250 bar était bien présente à son entrée. Comparez-le au couple résistant.</span></div>
+        <div class="field-label">ZONE DE CALCUL</div>
+        <div class="calc-area" contenteditable="true" data-placeholder="Pose ton calcul ici..." data-key="ex4-q1-calc"></div>
+        <div class="result-row">
+          <span class="field-label">RÉSULTAT</span>
+          <input class="result-input" type="text" placeholder="C théorique = … daN·m" data-key="ex4-q1-res">
+        </div>
+      </div>
+      <div class="question">
+        <div class="q-text"><span class="q-index">2.</span><span>Calculer le couple réellement développé avec la pression mesurée de 90 bar.</span></div>
+        <div class="field-label">ZONE DE CALCUL</div>
+        <div class="calc-area" contenteditable="true" data-placeholder="Pose ton calcul ici..." data-key="ex4-q2-calc"></div>
+        <div class="result-row">
+          <span class="field-label">RÉSULTAT</span>
+          <input class="result-input" type="text" placeholder="C réel = … daN·m" data-key="ex4-q2-res">
+        </div>
+      </div>
+      <div class="question">
+        <div class="q-text"><span class="q-index">3.</span><span>Comparez ce couple réel au couple résistant, concluez sur l'origine probable de la panne et proposez une action corrective.</span></div>
+        <div class="field-label">DIAGNOSTIC ET ACTION CORRECTIVE</div>
+        <div class="calc-area" contenteditable="true" data-placeholder="Compare, diagnostique la panne et propose une action..." data-key="ex4-q3-calc" style="min-height:100px;"></div>
+      </div>
+    </div>
+
+    <div class="bilan">
+      <h2>Bilan personnel</h2>
+      <div class="field-label">Qu'est-ce que je retiens de cette séance ? Sur quel type de calcul dois-je encore m'entraîner ?</div>
+      <div class="calc-area" contenteditable="true" data-placeholder="Écris ton bilan ici..." data-key="bilan"></div>
+    </div>
+
+    <div class="footer-note no-print">
+      <strong>Pour envoyer tes résultats :</strong> clique sur « Imprimer / Enregistrer en PDF » en haut de page, choisis « Enregistrer au format PDF » comme imprimante, puis joins le fichier obtenu à un e-mail destiné à ton professeur. Tes réponses sont conservées automatiquement dans ce navigateur si tu dois continuer plus tard.
+    </div>
+    <div class="footer-note" style="display:none;" id="printFooter">
+      Bac Pro MSPC — Première · Module Hydraulique industrielle · Carnet de résolution complété par l'élève
+    </div>
+  </div>
+
+<script>
+(function(){
+  var STORAGE_PREFIX = "mspc_hydro_carnet_v1_";
+  var fields = [];
+
+  function allEditableEls(){
+    return document.querySelectorAll('[data-key]');
+  }
+
+  function getValue(el){
+    if (el.hasAttribute('contenteditable')) return el.innerText;
+    return el.value;
+  }
+  function setValue(el, v){
+    if (el.hasAttribute('contenteditable')) el.innerText = v;
+    else el.value = v;
+  }
+
+  function save(el){
+    try{
+      var key = STORAGE_PREFIX + el.getAttribute('data-key');
+      localStorage.setItem(key, getValue(el));
+    }catch(e){ /* storage unavailable, silently ignore */ }
+  }
+  function restore(el){
+    try{
+      var key = STORAGE_PREFIX + el.getAttribute('data-key');
+      var v = localStorage.getItem(key);
+      if (v !== null) setValue(el, v);
+    }catch(e){ /* storage unavailable */ }
+  }
+
+  function saveMeta(){
+    try{
+      ["fNom","fClasse","fDate","fDuree"].forEach(function(id){
+        var el = document.getElementById(id);
+        if(el) localStorage.setItem(STORAGE_PREFIX + "meta_" + id, el.value);
+      });
+    }catch(e){}
+  }
+  function restoreMeta(){
+    try{
+      ["fNom","fClasse","fDate","fDuree"].forEach(function(id){
+        var el = document.getElementById(id);
+        var v = localStorage.getItem(STORAGE_PREFIX + "meta_" + id);
+        if(el && v !== null) el.value = v;
+      });
+    }catch(e){}
+  }
+
+  function updateProgress(){
+    var els = allEditableEls();
+    var filled = 0;
+    els.forEach(function(el){
+      if (getValue(el) && getValue(el).trim().length > 0) filled++;
+    });
+    var el = document.getElementById('progress');
+    if (el) el.innerHTML = '<b>' + filled + '</b>/' + els.length + ' champs complétés';
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    restoreMeta();
+    allEditableEls().forEach(function(el){
+      restore(el);
+      el.addEventListener('input', function(){ save(el); updateProgress(); });
+      el.addEventListener('blur', function(){ save(el); });
+    });
+    ["fNom","fClasse","fDate","fDuree"].forEach(function(id){
+      var el = document.getElementById(id);
+      if (el) el.addEventListener('input', saveMeta);
+    });
+    updateProgress();
+
+    document.getElementById('printBtn').addEventListener('click', function(){
+      window.print();
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', function(){
+      if (!confirm("Effacer toutes tes réponses saisies dans ce carnet ? Cette action est irréversible.")) return;
+      allEditableEls().forEach(function(el){
+        setValue(el, '');
+        try{ localStorage.removeItem(STORAGE_PREFIX + el.getAttribute('data-key')); }catch(e){}
+      });
+      updateProgress();
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
